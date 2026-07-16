@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma stratégie de recherche d'emploi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --beige:#D4AD89;
+    --beige-light:#F3E7D9;
+    --beige-pale:#FAF4EC;
+    --black:#1A1A1A;
+    --white:#FFFFFF;
+    --gray:#8A8A8A;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Montserrat',Arial,sans-serif;
+    background:var(--white);
+    color:var(--black);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 48px;}
+
+  /* ---- Header ---- */
+  .header{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:6px;
+  }
+  .logo{
+    width:44px;height:44px;border-radius:50%;
+    background:var(--black);
+    color:var(--beige);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:16px;letter-spacing:0.5px;
+    flex-shrink:0;
+  }
+  h1{
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:0.3px;
+    margin:0;
+    text-transform:uppercase;
+  }
+  .subtitle{
+    font-size:14.5px;
+    color:#444;
+    margin:6px 0 20px;
+    line-height:1.5;
+    max-width:760px;
+  }
+  .subtitle b{color:var(--black);}
+
+  /* ---- Name field ---- */
+  .namebar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    background:var(--beige-pale);
+    border:1px solid var(--beige);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    margin-bottom:22px;
+  }
+  .namebar label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
+  .namebar input{
+    flex:1;
+    min-width:180px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    padding:8px 10px;
+    font-family:inherit;
+    font-size:14px;
+    background:#fff;
+  }
+  .namebar input:focus{outline:2px solid var(--beige);border-color:var(--beige);}
+
+  /* ---- Board ---- */
+  .board{
+    display:grid;
+    grid-template-columns: 1.15fr 1fr 1fr 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .board{grid-template-columns:1fr;}
+  }
+
+  .column{
+    background:var(--beige-pale);
+    border:1.5px solid var(--beige);
+    border-radius:var(--radius);
+    min-height:120px;
+    display:flex;
+    flex-direction:column;
+    transition:box-shadow .15s ease, border-color .15s ease;
+  }
+  .column.dragover{
+    border-color:var(--black);
+    box-shadow:0 0 0 3px rgba(212,173,137,0.5) inset;
+  }
+  .col-head{
+    padding:12px 14px 10px;
+    border-bottom:1.5px solid var(--beige);
+  }
+  .col-title{
+    font-size:13.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+    line-height:1.25;
+    margin:0;
+  }
+  .col-sub{
+    font-size:11px;
+    color:var(--gray);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+  }
+  #col-atrier .col-head{background:var(--black);border-radius:8px 8px 0 0;}
+  #col-atrier .col-title{color:var(--white);}
+  #col-atrier .col-sub{color:var(--beige);}
+
+  .col-body{
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-height:70px;
+    flex:1;
+  }
+  .col-body:empty::after{
+    content:"Déposez vos cartes ici";
+    font-size:12px;
+    color:#b9a48c;
+    font-style:italic;
+    text-align:center;
+    padding:16px 4px;
+    display:block;
+  }
+
+  /* ---- Cards ---- */
+  .card{
+    background:#fff;
+    border:1.5px solid #e4d3bd;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    font-weight:600;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+    box-shadow:0 1px 2px rgba(0,0,0,0.05);
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    position:relative;
+  }
+  .card:hover{border-color:var(--beige);}
+  .card.selected{
+    border-color:var(--black);
+    box-shadow:0 0 0 2px var(--black) inset;
+  }
+  .card.dragging{
+    opacity:0.35;
+  }
+  .card.floating{
+    position:fixed;
+    z-index:999;
+    pointer-events:none;
+    box-shadow:0 8px 18px rgba(0,0,0,0.25);
+    transform:scale(1.03);
+  }
+
+  /* ---- Actions ---- */
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:14px;
+    margin-top:26px;
+  }
+  .btn{
+    font-family:inherit;
+    font-weight:800;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    padding:13px 26px;
+    border-radius:30px;
+    border:none;
+    cursor:pointer;
+    transition:transform .1s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--black);color:var(--beige);}
+  .btn-primary:hover{background:#000;}
+  .btn-secondary{
+    background:transparent;
+    color:var(--black);
+    border:1.5px solid var(--black);
+  }
+  .hint{
+    font-size:12.5px;
+    color:var(--gray);
+    flex-basis:100%;
+  }
+  .hint.warn{color:#a15c00;font-weight:600;}
+
+  footer{
+    margin-top:34px;
+    font-size:11px;
+    color:#b0b0b0;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">CD</div>
+    <h1>Ma stratégie de recherche d'emploi</h1>
+  </div>
+  <p class="subtitle">
+    Cliquez sur une carte puis glissez-la (ou appuyez pour la sélectionner, puis touchez la colonne de destination)
+    dans la colonne qui correspond le mieux à <b>votre</b> priorité. Il n'y a pas de bonne réponse : c'est votre boussole personnelle.
+  </p>
+
+  <div class="namebar">
+    <label for="userName">Nom / Prénom</label>
+    <input type="text" id="userName" placeholder="Ex. Dupont Marie" autocomplete="off">
+  </div>
+
+  <div class="board" id="board">
+    <div class="column" id="col-atrier" data-col="atrier">
+      <div class="col-head">
+        <p class="col-title">À trier</p>
+        <span class="col-sub">Vos critères</span>
+      </div>
+      <div class="col-body" id="body-atrier"></div>
+    </div>
+
+    <div class="column" data-col="indispensable">
+      <div class="col-head">
+        <p class="col-title">Indispensable</p>
+        <span class="col-sub">Non négociable</span>
+      </div>
+      <div class="col-body" id="body-indispensable"></div>
+    </div>
+
+    <div class="column" data-col="important">
+      <div class="col-head">
+        <p class="col-title">Important</p>
+        <span class="col-sub">À privilégier</span>
+      </div>
+      <div class="col-body" id="body-important"></div>
+    </div>
+
+    <div class="column" data-col="secondaire">
+      <div class="col-head">
+        <p class="col-title">Secondaire</p>
+        <span class="col-sub">Négociable</span>
+      </div>
+      <div class="col-body" id="body-secondaire"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="downloadBtn">Télécharger mon plan de recherche</button>
+    <button class="btn btn-secondary" id="resetBtn">Recommencer</button>
+    <span class="hint" id="hintText">Classez au moins un critère pour activer le téléchargement.</span>
+  </div>
+
+  <footer>Carole Dessain — Conseil / Digital Learning</footer>
+</div>
+
+<script>
+(function(){
+  var CRITERES = [
+    "Valeurs",
+    "Secteur",
+    "Localisation",
+    "Télétravail",
+    "Salaire",
+    "Taille de l'entreprise",
+    "Perspectives d'évolution",
+    "Ambiance",
+    "Horaires",
+    "Type de contrat"
+  ];
+
+  var COL_LABELS = {
+    atrier: {title:"À trier", sub:"Vos critères"},
+    indispensable: {title:"Indispensable", sub:"Non négociable"},
+    important: {title:"Important", sub:"À privilégier"},
+    secondaire: {title:"Secondaire", sub:"Négociable"}
+  };
+
+  var board = document.getElementById('board');
+  var hintText = document.getElementById('hintText');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var selectedCard = null;
+
+  function buildCards(){
+    document.getElementById('body-atrier').innerHTML = '';
+    ['indispensable','important','secondaire'].forEach(function(c){
+      document.getElementById('body-'+c).innerHTML = '';
+    });
+    CRITERES.forEach(function(label, i){
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.textContent = label;
+      card.setAttribute('draggable', 'false');
+      card.dataset.id = 'card-'+i;
+      attachCardEvents(card);
+      document.getElementById('body-atrier').appendChild(card);
+    });
+    updateState();
+  }
+
+  function attachCardEvents(card){
+    card.addEventListener('pointerdown', startDrag);
+  }
+
+  function selectCard(card){
+    if (selectedCard === card){
+      card.classList.remove('selected');
+      selectedCard = null;
+      return;
+    }
+    if (selectedCard) selectedCard.classList.remove('selected');
+    selectedCard = card;
+    card.classList.add('selected');
+  }
+
+  // Click on a column moves the selected card there (accessible fallback for touch)
+  document.querySelectorAll('.column').forEach(function(col){
+    col.addEventListener('click', function(e){
+      if (!selectedCard) return;
+      if (e.target.closest('.card')) return; // handled by card click
+      var body = col.querySelector('.col-body');
+      body.appendChild(selectedCard);
+      selectedCard.classList.remove('selected');
+      selectedCard = null;
+      updateState();
+    });
+  });
+
+  // ---- Pointer-based drag & drop (mouse + touch + pen) ----
+  // A pointerdown always starts here, but we only "become" a drag once the
+  // pointer has moved past a small threshold. Below that threshold, pointerup
+  // is treated as a tap -> select the card (accessible fallback for touch).
+  var DRAG_THRESHOLD = 6;
+  var pendingCard = null, isDragging = false;
+  var startX=0, startY=0, offsetX=0, offsetY=0, placeholder=null;
+
+  var activePointerId = null;
+
+  function startDrag(e){
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    var card = e.currentTarget;
+    pendingCard = card;
+    isDragging = false;
+    activePointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    var rect = card.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+    window.addEventListener('pointercancel', onDragCancel);
+    e.preventDefault();
+  }
+
+  function beginActualDrag(card){
+    isDragging = true;
+    var rect = card.getBoundingClientRect();
+    placeholder = document.createElement('div');
+    placeholder.className = 'card';
+    placeholder.style.visibility = 'hidden';
+    placeholder.style.height = rect.height+'px';
+    card.parentNode.insertBefore(placeholder, card.nextSibling);
+
+    card.classList.add('floating');
+    card.classList.remove('selected');
+    if (selectedCard === card) selectedCard = null;
+    card.style.width = rect.width+'px';
+    card.style.left = rect.left+'px';
+    card.style.top = rect.top+'px';
+    document.body.appendChild(card);
+  }
+
+  function onDragMove(e){
+    if (!pendingCard || e.pointerId !== activePointerId) return;
+    if (!isDragging){
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      if (Math.sqrt(dx*dx+dy*dy) < DRAG_THRESHOLD) return;
+      beginActualDrag(pendingCard);
+    }
+    pendingCard.style.left = (e.clientX - offsetX)+'px';
+    pendingCard.style.top = (e.clientY - offsetY)+'px';
+
+    document.querySelectorAll('.column').forEach(function(c){c.classList.remove('dragover');});
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    var col = under ? under.closest('.column') : null;
+    if (col) col.classList.add('dragover');
+  }
+
+  function cleanupListeners(){
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragEnd);
+    window.removeEventListener('pointercancel', onDragCancel);
+    activePointerId = null;
+  }
+
+  function onDragEnd(e){
+    if (!pendingCard || e.pointerId !== activePointerId) return;
+    var card = pendingCard;
+
+    if (!isDragging){
+      // it was a tap/click, not a drag
+      cleanupListeners();
+      pendingCard = null;
+      selectCard(card);
+      return;
+    }
+
+    card.classList.remove('floating');
+    card.style.width = '';
+    card.style.left = '';
+    card.style.top = '';
+
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    var col = under ? under.closest('.column') : null;
+    document.querySelectorAll('.column').forEach(function(c){c.classList.remove('dragover');});
+
+    if (col){
+      var body = col.querySelector('.col-body');
+      body.appendChild(card);
+      placeholder.remove();
+    } else {
+      placeholder.parentNode.replaceChild(card, placeholder);
+    }
+
+    cleanupListeners();
+    pendingCard = null;
+    isDragging = false;
+    placeholder = null;
+    updateState();
+  }
+
+  function onDragCancel(e){
+    if (!pendingCard || e.pointerId !== activePointerId) return;
+    var card = pendingCard;
+    if (isDragging){
+      card.classList.remove('floating');
+      card.style.width = '';
+      card.style.left = '';
+      card.style.top = '';
+      if (placeholder && placeholder.parentNode){
+        placeholder.parentNode.replaceChild(card, placeholder);
+      }
+    }
+    document.querySelectorAll('.column').forEach(function(c){c.classList.remove('dragover');});
+    cleanupListeners();
+    pendingCard = null;
+    isDragging = false;
+    placeholder = null;
+  }
+
+  function getSortedCount(){
+    return ['indispensable','important','secondaire'].reduce(function(sum,c){
+      return sum + document.getElementById('body-'+c).children.length;
+    }, 0);
+  }
+
+  function updateState(){
+    var count = getSortedCount();
+    if (count === 0){
+      downloadBtn.disabled = false;
+      hintText.textContent = "Classez au moins un critère pour activer le téléchargement.";
+      hintText.classList.remove('warn');
+    } else if (document.getElementById('body-atrier').children.length > 0){
+      hintText.textContent = "Il reste des critères à trier — vous pouvez déjà télécharger, ou continuer.";
+      hintText.classList.add('warn');
+    } else {
+      hintText.textContent = "Tous vos critères sont classés. Vous pouvez télécharger votre fiche.";
+      hintText.classList.remove('warn');
+    }
+  }
+
+  resetBtn.addEventListener('click', function(){
+    if (confirm("Recommencer le tri depuis le début ?")){
+      buildCards();
+    }
+  });
+
+  downloadBtn.addEventListener('click', function(){
+    var count = getSortedCount();
+    if (count === 0){
+      alert("Classez au moins un critère avant de télécharger votre fiche.");
+      return;
+    }
+    generatePDF();
+  });
+
+  function getColumnItems(colId){
+    return Array.prototype.map.call(
+      document.getElementById('body-'+colId).children,
+      function(c){ return c.textContent; }
+    );
+  }
+
+  function generatePDF(){
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({unit:'mm', format:'a4'});
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var margin = 18;
+    var beige = [212,173,137];
+    var black = [26,26,26];
+    var name = document.getElementById('userName').value.trim();
+
+    // Header band
+    doc.setFillColor(black[0],black[1],black[2]);
+    doc.rect(0,0,pageWidth,28,'F');
+    doc.setTextColor(beige[0],beige[1],beige[2]);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(18);
+    doc.text("MA STRATÉGIE DE RECHERCHE", margin, 17);
+    doc.setFontSize(10);
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','normal');
+    doc.text("Fiche personnelle — résultat de l'activité de tri des critères", margin, 23);
+
+    var y = 40;
+    doc.setTextColor(black[0],black[1],black[2]);
+    doc.setFontSize(11);
+    doc.setFont('helvetica','bold');
+    doc.text("Nom / Prénom :", margin, y);
+    doc.setFont('helvetica','normal');
+    doc.text(name || "________________________", margin+38, y);
+
+    y += 6;
+    doc.setFont('helvetica','bold');
+    doc.text("Date :", margin, y);
+    doc.setFont('helvetica','normal');
+    var d = new Date();
+    doc.text(d.toLocaleDateString('fr-FR'), margin+38, y);
+
+    y += 14;
+
+    var sections = [
+      {id:'indispensable', title:'INDISPENSABLE', sub:'Non négociable'},
+      {id:'important', title:'IMPORTANT', sub:'À privilégier'},
+      {id:'secondaire', title:'SECONDAIRE', sub:'Négociable'}
+    ];
+
+    sections.forEach(function(sec){
+      var items = getColumnItems(sec.id);
+      // section header bar
+      doc.setFillColor(beige[0],beige[1],beige[2]);
+      doc.roundedRect(margin, y, pageWidth-2*margin, 9, 2, 2, 'F');
+      doc.setTextColor(black[0],black[1],black[2]);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(11.5);
+      doc.text(sec.title + "  —  " + sec.sub, margin+4, y+6.2);
+      y += 15;
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(11);
+      if (items.length === 0){
+        doc.setTextColor(150,150,150);
+        doc.text("(aucun critère classé ici)", margin+4, y);
+        doc.setTextColor(black[0],black[1],black[2]);
+        y += 8;
+      } else {
+        items.forEach(function(it){
+          doc.circle(margin+3, y-1.3, 0.9, 'F');
+          doc.text(it, margin+8, y);
+          y += 7;
+        });
+      }
+      y += 6;
+
+      if (y > 250 && sec !== sections[sections.length-1]){
+        doc.addPage();
+        y = 25;
+      }
+    });
+
+    var remaining = getColumnItems('atrier');
+    if (remaining.length){
+      if (y > 240){ doc.addPage(); y = 25; }
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(160,90,0);
+      doc.text("Critères non classés : " + remaining.join(', '), margin, y);
+      y += 8;
+    }
+
+    // Footer
+    var pageCount = doc.internal.getNumberOfPages();
+    for (var p=1; p<=pageCount; p++){
+      doc.setPage(p);
+      doc.setFontSize(8.5);
+      doc.setTextColor(170,170,170);
+      doc.setFont('helvetica','normal');
+      doc.text("Carole Dessain — Conseil / Digital Learning", margin, 289);
+    }
+
+    var safeName = name ? name.replace(/[^a-zA-Z0-9À-ÿ_ -]/g,'').replace(/\s+/g,'_') : 'Nom_Prenom';
+    doc.save("MonPlanDeRecherche_" + safeName + ".pdf");
+  }
+
+  buildCards();
+})();
+</script>
+</body>
+</html>
