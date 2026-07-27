@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Déterminer les rubriques de mon outil</title>
+
+<!--
+  =====================================================================
+  POLICE "LEMON MILK" (charte graphique Carole Dessain)
+  Lemon Milk est une police "donationware" non hébergée sur un CDN
+  fiable/pérenne : il vaut mieux l'auto-héberger si vous en possédez
+  les fichiers. Décommentez le bloc @font-face ci-dessous et déposez
+  vos fichiers .woff2 à côté de ce fichier HTML dans Teachizy.
+  En attendant, "Poppins" (titres) + "Work Sans" (texte) reprennent
+  le même esprit géométrique et gras que Lemon Milk / Century Gothic
+  (police du PowerPoint), avec une lisibilité garantie sur tous les
+  écrans.
+  =====================================================================
+-->
+<!--
+<style>
+@font-face{
+  font-family:"Lemon Milk";
+  src:url("LemonMilkBold.woff2") format("woff2");
+  font-weight:700; font-display:swap;
+}
+@font-face{
+  font-family:"Lemon Milk";
+  src:url("LemonMilkRegular.woff2") format("woff2");
+  font-weight:400; font-display:swap;
+}
+</style>
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg-a: #eef2e0;
+    --bg-b: #dfe6c6;
+    --ink: #2b2620;
+    --ink-soft:#5b5748;
+    --rust: #A53010;
+    --orange:#DE7E18;
+    --tan: #D4AD89;
+    --tan-dark:#9F8351;
+    --white: #ffffff;
+    --line: rgba(43,38,32,0.14);
+
+    --cat-entreprise: #0090CE;
+    --cat-contacts:   #4E9178;
+    --cat-suivi:      #C99A16;
+    --cat-document:   #A53010;
+    --cat-obs:        #6E3696;
+    --cat-perso:      #9F8351;
+  }
+
+  *{ box-sizing:border-box; }
+
+  .cdc-app{
+    font-family:"Work Sans", "Century Gothic", "Apple Gothic", sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 600px at 12% 0%, #f4f7e9 0%, transparent 55%),
+      linear-gradient(160deg, var(--bg-a), var(--bg-b));
+    border-radius:18px;
+    padding:0 0 28px 0;
+    max-width:1180px;
+    margin:0 auto;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+
+  /* ---------- HEADER ---------- */
+  .cdc-header{ padding:26px 30px 18px; position:relative; }
+
+  .cdc-flag{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:var(--rust);
+    color:#fff;
+    font-family:"Poppins","Lemon Milk",sans-serif;
+    font-weight:700;
+    font-size:12.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:9px 18px 9px 16px;
+    clip-path:polygon(0 0,92% 0,100% 50%,92% 100%,0 100%);
+    margin-bottom:16px;
+  }
+
+  .cdc-header h2{
+    font-family:"Poppins","Lemon Milk",sans-serif;
+    font-weight:800;
+    font-size:clamp(22px,3vw,30px);
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+
+  .cdc-header p.instr{
+    margin:0 0 16px;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    max-width:760px;
+  }
+
+  .cdc-legend{
+    display:flex; flex-wrap:wrap; gap:8px 10px;
+  }
+  .cdc-chip{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:12.5px; font-weight:600;
+    background:#fff; border:1px solid var(--line);
+    padding:5px 12px 5px 8px; border-radius:999px;
+    color:var(--ink);
+  }
+  .cdc-chip .dot{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+
+  /* ---------- BODY LAYOUT ---------- */
+  .cdc-body{
+    display:grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap:22px;
+    padding:6px 30px 0;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .cdc-body{ grid-template-columns: 1fr; }
+  }
+
+  .cdc-panel{
+    background:rgba(255,255,255,.55);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+  }
+
+  .cdc-panel h3{
+    font-family:"Poppins","Lemon Milk",sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-weight:700;
+    margin:2px 4px 12px;
+    color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+
+  /* ---------- POOL (cartes disponibles) ---------- */
+  .cdc-cat-group{ margin-bottom:14px; }
+  .cdc-cat-group:last-child{ margin-bottom:0; }
+  .cdc-cat-label{
+    font-size:11.5px; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase;
+    margin:0 0 7px 4px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .cdc-cat-label .dot{ width:8px; height:8px; border-radius:50%; }
+
+  .cdc-pool-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+    gap:8px;
+  }
+
+  .card{
+    position:relative;
+    background:#fff;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:grab;
+    user-select:none;
+    line-height:1.25;
+    border:1.5px solid transparent;
+    box-shadow:0 1px 2px rgba(43,38,32,.06);
+    touch-action:none;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .card:active{ cursor:grabbing; }
+  .card:hover{ box-shadow:0 4px 10px rgba(43,38,32,.12); transform:translateY(-1px); }
+
+  .card.custom-card{
+    border-style:dashed;
+    font-weight:600;
+    display:flex; align-items:center; gap:6px;
+  }
+  .card.custom-card .plus{ font-size:15px; font-weight:800; }
+
+  .card.dragging-ghost{
+    position:fixed; z-index:999; pointer-events:none;
+    box-shadow:0 10px 24px rgba(43,38,32,.28);
+    opacity:.95; transform:scale(1.03) rotate(-1deg);
+  }
+  .card.source-hidden{ opacity:0; pointer-events:none; }
+
+  .cdc-empty-pool{
+    font-size:13px; color:var(--ink-soft); font-style:italic; padding:8px 4px;
+  }
+
+  /* ---------- TARGET (Mon outil) ---------- */
+  .cdc-target-panel h3 .count{
+    background:var(--rust); color:#fff; font-weight:700;
+    border-radius:999px; padding:2px 9px; font-size:11.5px;
+  }
+
+  .cdc-target{
+    min-height:340px;
+    border:2px dashed var(--line);
+    border-radius:12px;
+    padding:10px;
+    display:flex; flex-direction:column; gap:7px;
+    background:rgba(255,255,255,.35);
+  }
+  .cdc-target.drag-over{ border-color:var(--rust); background:rgba(165,48,16,.05); }
+
+  .cdc-target-empty{
+    margin:auto;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    padding:20px;
+    max-width:220px;
+  }
+
+  .row{
+    display:flex; align-items:center; gap:8px;
+    background:#fff;
+    border-radius:10px;
+    padding:8px 9px;
+    border-left:6px solid var(--rust);
+    box-shadow:0 1px 2px rgba(43,38,32,.06);
+    touch-action:none;
+  }
+  .row .num{
+    font-family:"Poppins",sans-serif; font-weight:700; font-size:11.5px;
+    color:#fff; background:var(--ink-soft);
+    width:20px;height:20px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  }
+  .row .handle{
+    cursor:grab; color:var(--ink-soft); flex:0 0 auto;
+    font-size:14px; letter-spacing:-2px; padding:0 2px;
+    touch-action:none;
+  }
+  .row .handle:active{ cursor:grabbing; }
+  .row .label{ flex:1; font-size:13.5px; font-weight:600; }
+  .row input.custom-input{
+    flex:1; border:none; border-bottom:1.5px dashed var(--line);
+    background:transparent; font-size:13.5px; font-weight:600;
+    font-family:inherit; color:var(--ink); padding:2px 0;
+  }
+  .row input.custom-input:focus{ outline:none; border-color:var(--rust); }
+  .row .arrows{ display:flex; flex-direction:column; flex:0 0 auto; }
+  .row .arrows button{
+    border:none;background:none;cursor:pointer;color:var(--ink-soft);
+    font-size:10px; line-height:9px; padding:1px 3px;
+  }
+  .row .arrows button:hover{ color:var(--ink); }
+  .row .arrows button:disabled{ opacity:.25; cursor:default; }
+  .row .remove{
+    border:none; background:none; cursor:pointer;
+    color:var(--ink-soft); font-size:16px; line-height:1; flex:0 0 auto;
+    padding:2px 4px; border-radius:6px;
+  }
+  .row .remove:hover{ color:var(--rust); background:rgba(165,48,16,.08); }
+
+  .row.dragging-ghost{
+    position:fixed; z-index:999; pointer-events:none;
+    box-shadow:0 10px 24px rgba(43,38,32,.28);
+    opacity:.95; width:var(--ghost-w,auto);
+  }
+  .row.source-hidden{ opacity:0; pointer-events:none; }
+  .drop-indicator{
+    height:3px; border-radius:3px; background:var(--rust);
+    margin:-2px 4px; opacity:0; transition:opacity .1s;
+  }
+  .drop-indicator.show{ opacity:1; }
+
+  /* ---------- ACTIONS ---------- */
+  .cdc-actions{
+    display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;
+  }
+  .btn{
+    font-family:"Poppins","Lemon Milk",sans-serif;
+    font-weight:700; font-size:13px;
+    border-radius:999px; padding:11px 20px;
+    border:1.5px solid transparent; cursor:pointer;
+    letter-spacing:.01em;
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{
+    background:var(--rust); color:#fff;
+    box-shadow:0 3px 10px rgba(165,48,16,.28);
+  }
+  .btn-primary:hover{ box-shadow:0 5px 14px rgba(165,48,16,.36); }
+  .btn-primary:disabled{
+    background:#c9c2b4; box-shadow:none; cursor:not-allowed;
+  }
+  .btn-ghost{
+    background:transparent; color:var(--ink-soft); border-color:var(--line);
+  }
+  .btn-ghost:hover{ border-color:var(--rust); color:var(--rust); }
+
+  .cdc-hint{
+    font-size:11.5px; color:var(--ink-soft); margin-top:10px; line-height:1.4;
+  }
+
+  .cdc-name-field{
+    display:flex; align-items:center; gap:8px; margin-bottom:12px;
+  }
+  .cdc-name-field label{ font-size:12.5px; color:var(--ink-soft); font-weight:600; }
+  .cdc-name-field input{
+    flex:1; border:1px solid var(--line); border-radius:8px;
+    padding:7px 10px; font-size:13px; font-family:inherit;
+    background:#fff;
+  }
+  .cdc-name-field input:focus{ outline:none; border-color:var(--rust); }
+</style>
+</head>
+<body style="margin:0; padding:16px; background:transparent;">
+
+<div class="cdc-app" id="cdcApp">
+
+  <div class="cdc-header">
+    <span class="cdc-flag">Déterminer les rubriques de l'outil</span>
+    <p class="instr">Cliquez sur une rubrique (ou glissez-la) pour l'ajouter à <strong>Mon outil</strong>, à droite.
+    Réorganisez-la ensuite comme vous le souhaitez : l'ordre correspond à l'ordre des colonnes de votre futur outil de suivi.</p>
+    <div class="cdc-legend" id="legend"></div>
+  </div>
+
+  <div class="cdc-body">
+
+    <div class="cdc-panel">
+      <h3>Rubriques disponibles</h3>
+      <div id="pool"></div>
+    </div>
+
+    <div class="cdc-panel cdc-target-panel">
+      <h3>Mon outil <span class="count" id="countBadge">0</span></h3>
+
+      <div class="cdc-name-field">
+        <label for="learnerName">Prénom&nbsp;:</label>
+        <input type="text" id="learnerName" placeholder="(optionnel, pour votre fiche PDF)">
+      </div>
+
+      <div class="cdc-target" id="target">
+        <p class="cdc-target-empty" id="targetEmpty">Votre outil est encore vide.<br>Ajoutez vos premières rubriques à gauche.</p>
+      </div>
+
+      <div class="cdc-actions">
+        <button class="btn btn-ghost" id="resetBtn">Réinitialiser</button>
+        <button class="btn btn-primary" id="downloadBtn" disabled>Télécharger mon choix de rubriques (PDF)</button>
+      </div>
+      <p class="cdc-hint">Votre sélection reste strictement personnelle : elle n'est ni enregistrée ni partagée, et disparaît si vous quittez la page — pensez à télécharger votre PDF avant de continuer.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const CATS = {
+    entreprise: { label:"Entreprise",      color:"var(--cat-entreprise)" },
+    contacts:   { label:"Contacts",        color:"var(--cat-contacts)"   },
+    suivi:      { label:"Suivi",           color:"var(--cat-suivi)"      },
+    document:   { label:"Document",        color:"var(--cat-document)"  },
+    obs:        { label:"Observations",    color:"var(--cat-obs)"       },
+    perso:      { label:"Personnalisation",color:"var(--cat-perso)"     }
+  };
+
+  const CARDS = [
+    {id:"ent1", cat:"entreprise", label:"Nom de l'entreprise"},
+    {id:"ent2", cat:"entreprise", label:"Secteur d'activité"},
+    {id:"ent3", cat:"entreprise", label:"Localisation"},
+    {id:"ent4", cat:"entreprise", label:"Site internet"},
+    {id:"ent5", cat:"entreprise", label:"Lien vers l'annonce"},
+    {id:"ent6", cat:"entreprise", label:"Source de l'offre"},
+
+    {id:"con1", cat:"contacts", label:"Coordonnées"},
+    {id:"con2", cat:"contacts", label:"Nom du recruteur"},
+    {id:"con3", cat:"contacts", label:"Fonction"},
+    {id:"con4", cat:"contacts", label:"Profil LinkedIn"},
+
+    {id:"sui1", cat:"suivi", label:"Date de candidature"},
+    {id:"sui2", cat:"suivi", label:"Date de relance"},
+    {id:"sui3", cat:"suivi", label:"Date d'entretien"},
+    {id:"sui4", cat:"suivi", label:"Date de réponse"},
+    {id:"sui5", cat:"suivi", label:"Statut de la candidature"},
+    {id:"sui6", cat:"suivi", label:"Résultat"},
+
+    {id:"doc1", cat:"document", label:"CV envoyé"},
+    {id:"doc2", cat:"document", label:"Lettre de motivation"},
+
+    {id:"obs1", cat:"obs", label:"Compatibilité avec mes critères"},
+    {id:"obs2", cat:"obs", label:"Priorité"},
+    {id:"obs3", cat:"obs", label:"Commentaires"},
+    {id:"obs4", cat:"obs", label:"Mes impressions"},
+
+    {id:"custom1", cat:"perso", label:"", custom:true},
+    {id:"custom2", cat:"perso", label:"", custom:true},
+    {id:"custom3", cat:"perso", label:"", custom:true},
+    {id:"custom4", cat:"perso", label:"", custom:true}
+  ];
+
+  const cardsById = Object.fromEntries(CARDS.map(c => [c.id, c]));
+  let targetOrder = [];   // array of ids, in chosen order
+  let customLabels = {};  // id -> user text (for custom cards)
+
+  const poolEl = document.getElementById('pool');
+  const targetEl = document.getElementById('target');
+  const targetEmptyEl = document.getElementById('targetEmpty');
+  const countBadge = document.getElementById('countBadge');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const legendEl = document.getElementById('legend');
+
+  // ---------- Legend ----------
+  Object.entries(CATS).forEach(([key, cat]) => {
+    if(key === 'perso') return; // pas besoin de légende pour "Ajouter une colonne"
+    const chip = document.createElement('span');
+    chip.className = 'cdc-chip';
+    chip.innerHTML = `<span class="dot" style="background:${cat.color}"></span>${cat.label}`;
+    legendEl.appendChild(chip);
+  });
+
+  // ---------- Render pool ----------
+  function renderPool(){
+    poolEl.innerHTML = '';
+    const remaining = CARDS.filter(c => !targetOrder.includes(c.id));
+    if(remaining.length === 0){
+      poolEl.innerHTML = '<p class="cdc-empty-pool">Toutes les rubriques ont été ajoutées à votre outil.</p>';
+      return;
+    }
+    Object.entries(CATS).forEach(([key, cat]) => {
+      const items = remaining.filter(c => c.cat === key);
+      if(items.length === 0) return;
+      const group = document.createElement('div');
+      group.className = 'cdc-cat-group';
+      group.innerHTML = `<div class="cdc-cat-label"><span class="dot" style="background:${cat.color}"></span>${cat.label}</div>`;
+      const grid = document.createElement('div');
+      grid.className = 'cdc-pool-grid';
+      items.forEach(c => grid.appendChild(buildPoolCard(c)));
+      group.appendChild(grid);
+      poolEl.appendChild(group);
+    });
+  }
+
+  function buildPoolCard(c){
+    const el = document.createElement('div');
+    el.className = 'card' + (c.custom ? ' custom-card' : '');
+    el.dataset.id = c.id;
+    el.style.borderColor = CATS[c.cat].color;
+    if(c.custom){
+      el.innerHTML = `<span class="plus" style="color:${CATS[c.cat].color}">+</span> Ajouter une colonne`;
+    } else {
+      el.textContent = c.label;
+      el.style.color = 'var(--ink)';
+      el.style.borderLeftWidth = '5px';
+      el.style.borderLeftColor = CATS[c.cat].color;
+    }
+    el.addEventListener('click', () => addToTarget(c.id));
+    makeDraggable(el, 'pool', c.id);
+    return el;
+  }
+
+  // ---------- Render target ----------
+  function renderTarget(){
+    targetEl.innerHTML = '';
+    if(targetOrder.length === 0){
+      targetEl.appendChild(targetEmptyEl);
+      countBadge.textContent = '0';
+      downloadBtn.disabled = true;
+      return;
+    }
+    targetEl.appendChild(indicator()); // top indicator
+    targetOrder.forEach((id, idx) => {
+      targetEl.appendChild(buildTargetRow(id, idx));
+      targetEl.appendChild(indicator());
+    });
+    countBadge.textContent = String(targetOrder.length);
+    downloadBtn.disabled = false;
+  }
+
+  function indicator(){
+    const d = document.createElement('div');
+    d.className = 'drop-indicator';
+    return d;
+  }
+
+  function buildTargetRow(id, idx){
+    const c = cardsById[id];
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.id = id;
+    row.style.borderLeftColor = CATS[c.cat].color;
+
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = idx + 1;
+    row.appendChild(num);
+
+    const handle = document.createElement('div');
+    handle.className = 'handle';
+    handle.textContent = '::';
+    handle.title = 'Glisser pour réordonner';
+    row.appendChild(handle);
+
+    if(c.custom){
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'custom-input';
+      input.placeholder = 'Nom de votre rubrique...';
+      input.value = customLabels[id] || '';
+      input.addEventListener('input', () => { customLabels[id] = input.value; });
+      row.appendChild(input);
+    } else {
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = c.label;
+      row.appendChild(label);
+    }
+
+    const arrows = document.createElement('div');
+    arrows.className = 'arrows';
+    const up = document.createElement('button');
+    up.innerHTML = '▲';
+    up.disabled = idx === 0;
+    up.addEventListener('click', () => moveItem(idx, idx - 1));
+    const down = document.createElement('button');
+    down.innerHTML = '▼';
+    down.disabled = idx === targetOrder.length - 1;
+    down.addEventListener('click', () => moveItem(idx, idx + 1));
+    arrows.appendChild(up); arrows.appendChild(down);
+    row.appendChild(arrows);
+
+    const remove = document.createElement('button');
+    remove.className = 'remove';
+    remove.innerHTML = '&times;';
+    remove.title = 'Retirer';
+    remove.addEventListener('click', () => removeFromTarget(id));
+    row.appendChild(remove);
+
+    makeDraggable(row, 'target', id, handle);
+    return row;
+  }
+
+  // ---------- State mutations ----------
+  function addToTarget(id){
+    if(targetOrder.includes(id)) return;
+    targetOrder.push(id);
+    renderAll();
+    if(cardsById[id].custom){
+      requestAnimationFrame(() => {
+        const row = targetEl.querySelector(`.row[data-id="${id}"] input`);
+        if(row) row.focus();
+      });
+    }
+  }
+
+  function removeFromTarget(id){
+    targetOrder = targetOrder.filter(x => x !== id);
+    if(cardsById[id].custom) customLabels[id] = '';
+    renderAll();
+  }
+
+  function moveItem(fromIdx, toIdx){
+    if(toIdx < 0 || toIdx >= targetOrder.length) return;
+    const [moved] = targetOrder.splice(fromIdx, 1);
+    targetOrder.splice(toIdx, 0, moved);
+    renderAll();
+  }
+
+  function renderAll(){
+    renderPool();
+    renderTarget();
+  }
+
+  // ---------- Pointer-based drag & drop (mouse + touch) ----------
+  let dragState = null;
+
+  function makeDraggable(el, source, id, handleEl){
+    const grip = handleEl || el;
+    grip.addEventListener('pointerdown', (e) => {
+      if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+      e.preventDefault();
+      startDrag(e, el, source, id);
+    });
+  }
+
+  function startDrag(e, sourceEl, source, id){
+    const rect = sourceEl.getBoundingClientRect();
+    const ghost = sourceEl.cloneNode(true);
+    ghost.classList.add('dragging-ghost');
+    ghost.style.width = rect.width + 'px';
+    ghost.style.left = rect.left + 'px';
+    ghost.style.top = rect.top + 'px';
+    document.body.appendChild(ghost);
+    sourceEl.classList.add('source-hidden');
+
+    dragState = {
+      id, source, ghost,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      sourceEl
+    };
+
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd, {once:true});
+  }
+
+  function onDragMove(e){
+    if(!dragState) return;
+    const {ghost, offsetX, offsetY} = dragState;
+    ghost.style.left = (e.clientX - offsetX) + 'px';
+    ghost.style.top = (e.clientY - offsetY) + 'px';
+
+    // highlight target zone + indicator
+    const overTarget = elementIsWithin(e.clientX, e.clientY, targetEl);
+    targetEl.classList.toggle('drag-over', overTarget);
+    clearIndicators();
+    if(overTarget){
+      const {indicatorEl} = findInsertionPoint(e.clientY);
+      if(indicatorEl) indicatorEl.classList.add('show');
+    }
+  }
+
+  function elementIsWithin(x, y, container){
+    const rect = container.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }
+
+  function clearIndicators(){
+    targetEl.querySelectorAll('.drop-indicator').forEach(d => d.classList.remove('show'));
+  }
+
+  function findInsertionPoint(y){
+    const rows = Array.from(targetEl.querySelectorAll('.row'));
+    let insertIndex = rows.length;
+    for(let i = 0; i < rows.length; i++){
+      const r = rows[i].getBoundingClientRect();
+      if(y < r.top + r.height / 2){ insertIndex = i; break; }
+    }
+    const indicators = Array.from(targetEl.querySelectorAll('.drop-indicator'));
+    const indicatorEl = indicators[insertIndex] || indicators[indicators.length - 1];
+    return {insertIndex, indicatorEl};
+  }
+
+  function onDragEnd(e){
+    if(!dragState) return;
+    const {id, source, ghost, sourceEl} = dragState;
+    document.removeEventListener('pointermove', onDragMove);
+    ghost.remove();
+    clearIndicators();
+    targetEl.classList.remove('drag-over');
+
+    const overTarget = elementIsWithin(e.clientX, e.clientY, targetEl);
+
+    if(overTarget){
+      const {insertIndex} = findInsertionPoint(e.clientY);
+      if(source === 'pool'){
+        targetOrder.splice(insertIndex, 0, id);
+      } else {
+        const curIdx = targetOrder.indexOf(id);
+        targetOrder.splice(curIdx, 1);
+        let adjIndex = insertIndex;
+        if(curIdx < insertIndex) adjIndex -= 1;
+        targetOrder.splice(adjIndex, 0, id);
+      }
+    } else {
+      if(source === 'target'){
+        targetOrder = targetOrder.filter(x => x !== id);
+        if(cardsById[id].custom) customLabels[id] = '';
+      }
+      // if source === 'pool' and dropped outside target: no-op
+    }
+
+    sourceEl.classList.remove('source-hidden');
+    dragState = null;
+    renderAll();
+  }
+
+  // ---------- Reset ----------
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(targetOrder.length === 0) return;
+    if(!confirm('Réinitialiser votre sélection ? Les rubriques déjà ajoutées seront retirées.')) return;
+    targetOrder = [];
+    customLabels = {};
+    renderAll();
+  });
+
+  // ---------- PDF export ----------
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    if(targetOrder.length === 0) return;
+
+    const items = targetOrder.map(id => {
+      const c = cardsById[id];
+      const label = c.custom ? (customLabels[id] || '').trim() : c.label;
+      return { label: label || (c.custom ? '(rubrique personnalisée non complétée)' : c.label), cat: c.cat };
+    });
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const marginX = 50;
+    let y = 64;
+
+    const rust = [165,48,16];
+    const ink = [43,38,32];
+    const inkSoft = [110,103,89];
+
+    const catColors = {
+      entreprise:[0,144,206], contacts:[78,145,120], suivi:[201,154,22],
+      document:[165,48,16], obs:[110,54,150], perso:[159,131,81]
+    };
+
+    // Bandeau
+    doc.setFillColor(...rust);
+    doc.rect(0, 0, pageW, 8, 'F');
+
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(19);
+    doc.setTextColor(...ink);
+    doc.text('Mon choix de rubriques', marginX, y);
+    y += 22;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(12);
+    doc.setTextColor(...inkSoft);
+    doc.text('de mon outil de suivi de recherche d\'emploi', marginX, y);
+    y += 26;
+
+    const name = document.getElementById('learnerName').value.trim();
+    const dateStr = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'});
+    doc.setFontSize(10.5);
+    doc.setTextColor(...inkSoft);
+    doc.text((name ? `${name} — ` : '') + dateStr, marginX, y);
+    y += 22;
+
+    doc.setDrawColor(220,215,200);
+    doc.line(marginX, y, pageW - marginX, y);
+    y += 26;
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...ink);
+    doc.text('Voici, dans l\'ordre que j\'ai choisi, les rubriques de mon futur outil de suivi :', marginX, y);
+    y += 26;
+
+    items.forEach((item, i) => {
+      if(y > 760){ doc.addPage(); y = 60; }
+      const col = catColors[item.cat] || ink;
+
+      // numéro
+      doc.setFillColor(...inkSoft);
+      doc.circle(marginX + 8, y - 4, 9, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.text(String(i + 1), marginX + 8, y - 1, {align:'center'});
+
+      // pastille couleur
+      doc.setFillColor(...col);
+      doc.circle(marginX + 30, y - 4, 4, 'F');
+
+      // label
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(12);
+      doc.setTextColor(...ink);
+      doc.text(item.label, marginX + 42, y);
+
+      y += 22;
+    });
+
+    y += 14;
+    if(y > 740){ doc.addPage(); y = 60; }
+    doc.setDrawColor(220,215,200);
+    doc.line(marginX, y, pageW - marginX, y);
+    y += 22;
+    doc.setFont('helvetica','italic');
+    doc.setFontSize(10);
+    doc.setTextColor(...inkSoft);
+    const note = "Ce document sera transmis à l'IA, avec ma fiche \"Ma stratégie de recherche\", pour concevoir mon futur outil de suivi de recherche d'emploi.";
+    const split = doc.splitTextToSize(note, pageW - marginX*2);
+    doc.text(split, marginX, y);
+
+    const fileName = 'mon-choix-de-rubriques' + (name ? '-' + name.toLowerCase().replace(/[^a-z0-9]+/g,'-') : '') + '.pdf';
+    doc.save(fileName);
+  });
+
+  // ---------- init ----------
+  renderAll();
+
+})();
+</script>
+
+</body>
+</html>
